@@ -1,0 +1,69 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "Consensus"
+seoTitle: "EVM to SVM: Understanding Consensus"
+description:
+  "Learn how consensus is achieved on Solana as compared to Ethereum."
+tags:
+  - migration
+  - evm
+  - consensus
+keywords:
+  - proof of stake
+  - proof of history
+  - ethereum consensus
+  - solana consensus
+---
+
+# EVM vs. SVM: Understanding Consensus
+
+Learn how consensus is achieved on Solana as compared to Ethereum.
+
+## Ethereum: Proof of Stake
+
+Ethereum uses Proof of Stake (PoS). Validators stake 32 ETH to participate.
+Consensus is achieved through attestations from a supermajority (2/3+) of
+validators. Finality takes ~12 minutes (2 epochs) under Gasper.
+
+## Solana: Proof of History + Tower BFT
+
+Solana combines two mechanisms:
+
+**Proof of History (PoH):** A cryptographic clock that provides a verifiable
+ordering of events without requiring validators to communicate to agree on time.
+This enables high throughput by reducing coordination overhead.
+
+**Tower BFT:** A PoS-based consensus algorithm optimized around PoH. Validators
+vote on the highest PoH-compatible fork, with votes becoming harder to roll back
+over time (exponential lockout).
+
+## Comparison
+
+|                         | Ethereum     | Solana                          |
+| ----------------------- | ------------ | ------------------------------- |
+| Mechanism               | PoS (Gasper) | PoH + Tower BFT                 |
+| Block time              | ~12 seconds  | ~400ms                          |
+| Optimistic finality     | ~12s         | ~400ms                          |
+| Full finality           | ~12 minutes  | ~13 seconds                     |
+| Validator minimum stake | 32 ETH       | No minimum (delegated)          |
+| Throughput              | ~15–30 TPS   | Up to 65,000+ TPS (theoretical) |
+
+## Implications for Developers
+
+- **Solana's faster finality** means you can build apps that react to confirmed
+  transactions much faster.
+- **No mempool** on Solana — transactions are forwarded directly to the current
+  leader.
+- **Transaction confirmation levels:** `processed` → `confirmed` → `finalized`.
+  Use `confirmed` for most apps; `finalized` for high-value operations.
+
+## Resources
+
+- [Solana Consensus docs](/docs/core)
+- [Proof of History explained](https://solana.com/news/proof-of-history)
+
+---
+
+[← Client Differences](/developers/guides/migration/client-differences) |
+[← Back to EVM Hub](/developers/guides/migration/evm-to-solana)

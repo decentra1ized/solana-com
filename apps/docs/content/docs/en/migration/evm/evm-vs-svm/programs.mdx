@@ -1,0 +1,119 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "Programs and Smart Contracts"
+seoTitle: "EVM to SVM: Programs and Smart Contracts"
+description:
+  "Explore programs—known as smart contracts in other ecosystems—and how they
+  work on Solana."
+tags:
+  - migration
+  - evm
+  - programs
+keywords:
+  - solana programs
+  - smart contracts
+  - rust
+  - anchor
+  - solidity
+---
+
+# EVM vs. SVM: Programs and Smart Contracts
+
+Explore programs—known as smart contracts in other ecosystems—and how they work
+on Solana.
+
+## Key Differences
+
+On Ethereum, smart contracts store their own state. On Solana, programs are
+**stateless** — all state lives in separate accounts owned by the program. This
+separation enables Solana's parallel transaction execution.
+
+| Ethereum                         | Solana                                   |
+| -------------------------------- | ---------------------------------------- |
+| Smart Contracts (Solidity)       | Programs (Rust / BPF)                    |
+| State stored inside the contract | State stored in external accounts (PDAs) |
+| Deployed as bytecode (EVM)       | Deployed as bytecode (BPF)               |
+| Address = contract identity      | Program ID = program identity            |
+| `msg.sender`                     | `ctx.accounts.signer`                    |
+| `mapping(address => uint)`       | PDA accounts per user                    |
+
+## Writing Programs with Anchor
+
+[Anchor](https://www.anchor-lang.com/) is the most popular framework for writing
+Solana programs, similar to how Hardhat/Foundry is used for Ethereum.
+
+```rust
+use anchor_lang::prelude::*;
+
+#[program]
+pub mod counter {
+    use super::*;
+
+    pub fn increment(ctx: Context<Increment>) -> Result<()> {
+        ctx.accounts.counter.count += 1;
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct Increment<'info> {
+    #[account(mut)]
+    pub counter: Account<'info, Counter>,
+    pub authority: Signer<'info>,
+}
+
+#[account]
+pub struct Counter {
+    pub count: u64,
+}
+```
+
+The equivalent Solidity contract:
+
+```solidity
+contract Counter {
+    uint public count = 0;
+
+    function increment() public {
+        count += 1;
+    }
+}
+```
+
+## Key Concepts
+
+### Program Derived Addresses (PDAs)
+
+PDAs replace Solidity's `mapping` for storing per-user state:
+
+```rust
+// Finding a PDA for a user's counter
+let (counter_pda, bump) = Pubkey::find_program_address(
+    &[b"counter", user.key().as_ref()],
+    &program_id,
+);
+```
+
+### Cross-Program Invocation (CPI)
+
+CPI is Solana's equivalent of calling another contract from Solidity:
+
+```rust
+// CPI example: calling the token program
+token::transfer(
+    CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer),
+    amount,
+)?;
+```
+
+## Resources
+
+- [Anchor Documentation](https://www.anchor-lang.com/)
+- [Solana Programs Core Docs](/docs/core/programs)
+- [Intro to Solana Development](/developers/guides/getstarted/hello-world-in-your-browser)
+
+---
+
+[← Accounts](/developers/guides/migration/accounts) |
+[Next: Client Differences →](/developers/guides/migration/client-differences)

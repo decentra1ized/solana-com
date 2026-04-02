@@ -1,0 +1,101 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "Client Differences"
+seoTitle: "EVM to SVM: Client Differences"
+description:
+  "Learn about the differences between clients on Solana and Ethereum."
+tags:
+  - migration
+  - evm
+  - clients
+keywords:
+  - validator clients
+  - solana rpc
+  - ethereum clients
+  - geth
+  - solana validator
+---
+
+# EVM vs. SVM: Client Differences
+
+Learn about the differences between clients on Solana and Ethereum.
+
+Ethereum and Solana are unique blockchains that have multiple diverse validator
+clients for validating transactions. Having various validator clients helps
+prevent network disruptions in case a specific client encounters issues.
+
+## Types of Validator Clients
+
+As Ethereum transitioned from PoW to PoS, it adopted two types of validator
+clients: Execution Layer (EL) and Consensus Layer (CL) clients.
+
+- **Execution clients** receive new transactions, execute them on the EVM, and
+  maintain the current state and database of all Ethereum data.
+- **Consensus clients** implement the PoS consensus algorithm and achieve
+  consensus based on verified data from execution clients.
+
+In contrast, **Solana combines both functionalities in a single client**.
+
+**Ethereum Execution Clients:**
+
+| Client     | Language |
+| ---------- | -------- |
+| Geth       | Golang   |
+| Besu       | Java     |
+| Nethermind | C#       |
+| Erigon     | Golang   |
+
+**Ethereum Consensus Clients:**
+
+| Client     | Language |
+| ---------- | -------- |
+| Prysm      | Golang   |
+| Lighthouse | Rust     |
+| Teku       | Java     |
+| Nimbus     | Nim      |
+
+**Solana Validator Clients:**
+
+| Client                       | Language |
+| ---------------------------- | -------- | --------------------------------------------- |
+| Agave (formerly Solana Labs) | Rust     |
+| Firedancer (Jump Crypto)     | C        | In development; partially deployed on mainnet |
+
+## Types of Nodes
+
+Both networks support different node types:
+
+| Node Type    | Ethereum                    | Solana               |
+| ------------ | --------------------------- | -------------------- |
+| Full Node    | Stores full chain state     | Validator / RPC node |
+| Light Node   | Stores only block headers   | —                    |
+| Archive Node | Stores all historical state | Archive RPC node     |
+
+## RPC Providers
+
+**Ethereum RPC services:**
+
+- Infura
+- Alchemy
+- QuickNode
+
+**Solana RPC services:**
+
+- Helius
+- QuickNode
+- Triton One
+- Alchemy
+
+## Summary
+
+- Ethereum uses separate execution and consensus clients; Solana uses a unified
+  client.
+- Solana currently has two major validator clients: Agave (production) and
+  Firedancer (in development, partially deployed on mainnet).
+- Both networks have a growing ecosystem of RPC providers.
+
+---
+
+[← Smart Contracts](/developers/guides/migration/smart-contracts) |
+[Next: Consensus →](/developers/guides/migration/consensus)

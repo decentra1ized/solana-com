@@ -1,0 +1,76 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: advanced
+title: "ERC3643"
+seoTitle: "EVM to SVM: ERC3643 (T-REX) on Solana"
+description: "Learn how to build ERC3643 compliant security tokens on Solana."
+tags:
+  - migration
+  - evm
+  - tokens
+  - compliance
+keywords:
+  - erc3643
+  - trex
+  - security token
+  - compliance
+  - token extensions
+---
+
+# ERC3643
+
+Learn how to build ERC3643 (T-REX) compliant security tokens on Solana.
+
+## What is ERC3643?
+
+ERC3643 (T-REX) is Ethereum's standard for regulated/permissioned tokens. It
+adds on-chain identity verification, compliance rules, and transfer restrictions
+on top of ERC20.
+
+## Solana Equivalent: Token-2022 with Extensions
+
+On Solana, Token-2022 (Token Extensions) provides built-in compliance
+primitives, eliminating the need for a separate compliance framework:
+
+| ERC3643 Feature            | Token-2022 Extension          |
+| -------------------------- | ----------------------------- |
+| Transfer restrictions      | Transfer Hook                 |
+| Identity verification      | Transfer Hook + off-chain KYC |
+| Forced transfer (recovery) | Permanent Delegate            |
+| Token pausing              | Freeze Authority              |
+| Compliance rules           | Transfer Hook program         |
+
+## Transfer Hook for Compliance
+
+The Transfer Hook extension allows you to attach a custom program that runs on
+every transfer, enabling arbitrary compliance logic:
+
+```rust
+#[program]
+pub mod compliance_hook {
+    use super::*;
+
+    pub fn transfer_hook(ctx: Context<TransferHook>, amount: u64) -> Result<()> {
+        // Verify both sender and receiver are KYC'd
+        require!(
+            ctx.accounts.sender_identity.is_verified,
+            ComplianceError::SenderNotVerified
+        );
+        require!(
+            ctx.accounts.receiver_identity.is_verified,
+            ComplianceError::ReceiverNotVerified
+        );
+        Ok(())
+    }
+}
+```
+
+## Resources
+
+- [Token-2022 docs](/docs/core/tokens#token-extensions)
+- [Transfer Hook guide](https://solana.com/developers/guides/token-extensions/transfer-hook)
+- [Token Extensions overview](https://solana.com/solutions/token-extensions)
+
+---
+
+[← EVM to Solana Hub](/developers/guides/migration/evm-to-solana)

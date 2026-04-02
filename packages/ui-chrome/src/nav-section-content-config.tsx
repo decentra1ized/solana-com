@@ -128,7 +128,7 @@ export const buildTutorialItems: NavItemDefinition[] = [
   {
     id: "build-chain-migration",
     titleKey: "nav.developers.tutorials.chain-migration",
-    href: "/developers/migrate-to-solana",
+    href: "/docs/migration",
     icon: EthereumIcon,
   },
 ];

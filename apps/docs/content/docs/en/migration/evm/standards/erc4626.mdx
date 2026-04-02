@@ -1,0 +1,84 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: advanced
+title: "ERC4626"
+seoTitle: "EVM to SVM: ERC4626 (Tokenized Vaults) on Solana"
+description: "Learn how to build ERC4626 tokenized vault patterns on Solana."
+tags:
+  - migration
+  - evm
+  - defi
+  - vaults
+keywords:
+  - erc4626
+  - tokenized vault
+  - yield vault
+  - solana defi
+---
+
+# ERC4626
+
+Learn how to build ERC4626 tokenized vault patterns on Solana.
+
+## What is ERC4626?
+
+ERC4626 is Ethereum's standard for tokenized yield-bearing vaults. It provides a
+standard interface for depositing underlying assets and receiving yield-bearing
+shares in return.
+
+## Solana Equivalent Pattern
+
+On Solana, vault patterns are implemented using Anchor programs with:
+
+- A **vault account** holding the underlying assets (SPL tokens).
+- A **shares mint** (SPL token) representing proportional ownership.
+- Instructions for `deposit`, `withdraw`, `redeem`.
+
+```rust
+#[program]
+pub mod vault {
+    use super::*;
+
+    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+        // Calculate shares to mint based on current exchange rate
+        let shares = calculate_shares(amount, ctx.accounts.vault.total_assets,
+                                      ctx.accounts.shares_mint.supply);
+        // Transfer underlying tokens to vault
+        token::transfer(ctx.accounts.transfer_ctx(), amount)?;
+        // Mint shares to depositor
+        token::mint_to(ctx.accounts.mint_ctx(), shares)?;
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
+        // Calculate underlying tokens to return
+        let assets = calculate_assets(shares, ctx.accounts.vault.total_assets,
+                                      ctx.accounts.shares_mint.supply);
+        // Burn shares
+        token::burn(ctx.accounts.burn_ctx(), shares)?;
+        // Transfer underlying tokens to user
+        token::transfer(ctx.accounts.transfer_ctx(), assets)?;
+        Ok(())
+    }
+}
+```
+
+## Key Differences
+
+| ERC4626 (Ethereum)                  | Solana Vault                        |
+| ----------------------------------- | ----------------------------------- |
+| Single contract                     | Program + multiple accounts         |
+| `deposit(assets, receiver)`         | `deposit` instruction with accounts |
+| `withdraw(assets, receiver, owner)` | `withdraw` instruction              |
+| `convertToShares(assets)`           | On-chain calculation in program     |
+| Events via `emit`                   | Account state changes               |
+
+## Resources
+
+- [Solana DeFi patterns](/developers)
+- [Anchor documentation](https://www.anchor-lang.com/)
+- [SPL Token Program](/docs/core/tokens)
+
+---
+
+[← EVM to Solana Hub](/developers/guides/migration/evm-to-solana)

@@ -380,6 +380,28 @@ export default {
   },
 
   redirects: withLocaleRedirects([
+    // Chain migration: redirect old web app paths to new docs paths
+    {
+      source: "/developers/migrate-to-solana",
+      destination: "/docs/migration",
+    },
+    {
+      source: "/developers/migrate-to-solana/:path*",
+      destination: "/docs/migration/:path*",
+    },
+    {
+      source: "/developers/evm-to-svm",
+      destination: "/docs/migration/evm-to-solana",
+    },
+    {
+      source: "/developers/evm-to-svm/:path*",
+      destination: "/docs/migration/:path*",
+    },
+    {
+      source: "/developers/cosmos-to-svm",
+      destination: "/docs/migration/cosmwasm-to-solana",
+    },
+
     { source: "/brand", destination: "/branding" },
     { source: "/press", destination: "/branding" },
     // TODO: set to newws/upgrades when we have articles

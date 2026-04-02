@@ -1,0 +1,148 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "Accounts"
+seoTitle: "EVM to SVM: Accounts"
+description: "See how accounts differ between Ethereum and Solana."
+tags:
+  - migration
+  - evm
+  - accounts
+keywords:
+  - ethereum accounts
+  - solana accounts
+  - eoa
+  - pda
+  - account abstraction
+---
+
+# Accounts
+
+As blockchain networks, Ethereum and Solana function as global public computers
+that store and share data. This chapter explores how each chain structures that
+data.
+
+## Accounts in Ethereum
+
+In Ethereum, an "account" is an entity that owns Ether and can send
+transactions. Accounts fall into two types:
+
+- **EOA (Externally Owned Account):** Controlled by a private key — an
+  individual's wallet.
+- **CA (Contract Account):** Holds smart contract code and is controlled by that
+  code's logic, not a private key.
+
+**EOA fields:**
+
+| Field          | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `address`      | The account's address                                         |
+| `balance`      | Amount of ETH (in wei) owned                                  |
+| `nonce`        | Transaction count; prevents replay attacks                    |
+| `code hash`    | Hash of the account's EVM code (null for EOAs)                |
+| `storage hash` | Root of a Merkle Patricia Tree encoding the account's storage |
+
+A Contract Account has no private key and cannot initiate transactions on its
+own. Transaction flow rules:
+
+```
+EOA → EOA      ✓
+EOA → CA       ✓
+EOA → CA → CA  ✓
+CA  → CA       ✗  (CAs cannot initiate transactions)
+```
+
+## Accounts in Solana
+
+In Solana, **all data is stored in accounts** — both code and state. Similar to
+files in an operating system, accounts store arbitrary data that persists across
+transactions.
+
+**Solana account fields:**
+
+| Field        | Description                                           |
+| ------------ | ----------------------------------------------------- |
+| `lamports`   | Balance in lamports (1 SOL = 1,000,000,000 lamports)  |
+| `owner`      | The program that owns and can modify this account     |
+| `executable` | Whether this account contains executable program code |
+| `data`       | Raw byte array stored by this account                 |
+| `rent_epoch` | Next epoch at which this account owes rent            |
+
+Accounts must maintain a minimum lamport balance to be **rent-exempt**;
+otherwise the runtime will eventually purge them.
+
+Solana accounts are divided into two types:
+
+- **Executable accounts (program accounts):** Contain program bytecode —
+  analogous to Ethereum's Contract Accounts.
+- **Non-executable accounts (data accounts):** Store state. Unlike Ethereum
+  EOAs, these are not tied to a private key and can be owned by any program.
+
+**Account type mapping:**
+
+| Ethereum | Solana                      | Notes                                                                              |
+| -------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| EOA      | Non-executable data account | A Solana wallet is a collection of data accounts — a broader concept than EOA.     |
+| CA       | Executable program account  | Solana programs are stateless; their state lives in separate data accounts (PDAs). |
+
+**Field comparison:**
+
+| Ethereum       | Solana                |
+| -------------- | --------------------- |
+| `balance`      | `lamports`            |
+| `nonce`        | — (no equivalent)     |
+| `code hash`    | `executable` + `data` |
+| `storage hash` | `data`                |
+| —              | `owner`               |
+| —              | `rent_epoch`          |
+
+## Account Abstraction
+
+Ethereum introduced account abstraction (AA) via
+[ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) to overcome the limitation
+that CAs cannot initiate or sign transactions — every interaction requires an
+EOA as the entry point.
+
+```
+# Before ERC-4337
+EOA → CA     ✓
+CA  → CA     ✗
+
+# After ERC-4337
+EOA + CA (AA) → CA  ✓
+```
+
+Key benefits:
+
+- Gas sponsorship (paymasters cover fees on behalf of users)
+- Pay transaction fees in ERC-20 tokens
+- Custom signature schemes and security rules
+- Social recovery in case of key loss
+- Batch transactions (e.g., approve + swap in a single call)
+
+## Account Abstraction on Solana
+
+**Solana has supported account abstraction natively since launch** via **Program
+Derived Addresses (PDAs)**. PDAs are accounts whose addresses are
+deterministically derived from a program ID and seeds — they have no private key
+and can only be authorized by their owning program.
+
+```rust
+// Derive a PDA for a user's data account
+let (pda, bump) = Pubkey::find_program_address(
+    &[b"user-account", user.key().as_ref()],
+    &program_id,
+);
+```
+
+This enables programs to autonomously authorize on-chain actions on behalf of
+program-controlled accounts, without the layered workarounds required by
+ERC-4337.
+
+## Summary
+
+- In Solana, all on-chain data — including program state — lives in accounts.
+- Solana programs are stateless: they read from and write to separate data
+  accounts (PDAs) rather than storing state internally.
+- Solana has native account abstraction via PDAs, making ERC-4337-style
+  workarounds unnecessary.

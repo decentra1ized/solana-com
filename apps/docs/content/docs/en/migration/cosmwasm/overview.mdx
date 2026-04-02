@@ -1,0 +1,226 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: advanced
+title: "Cosmos to Solana Migration Guide"
+seoTitle: "Cosmos to Solana Migration Guide"
+description:
+  "A complete guide to migrating a Cosmos app chain to Solana, covering
+  governance, state migration, and token migration."
+tags:
+  - migration
+  - cosmos
+  - cosmwasm
+keywords:
+  - cosmos to solana
+  - cosmwasm migration
+  - chain migration
+  - token migration
+  - governance migration
+---
+
+# Cosmos to Solana Migration Guide
+
+A complete walkthrough for migrating a Cosmos app chain to Solana — from chain
+wind-down and state export to token claims, governance migration, and Solana
+deployment.
+
+## Overview
+
+Migrating a Cosmos app chain to Solana involves five key phases:
+
+1. **Preparation** — Governance, development, and testing
+2. **Cosmos Wind-Down** — Chain shutdown allowing users to unwind positions
+3. **State Processing** — Snapshot export and merkleization of data
+4. **Solana Deployment** — Programs, tokens, and governance
+5. **Migration Execution** — Token claims and liquidity bootstrapping
+
+## Phase 1: Cosmos Wind-Down
+
+- **Create a Governance Proposal** including snapshot height for chain upgrade,
+  program IDs on Solana, decommission timeline, governance migration to Realms,
+  validator migration plan, SPL token claim window, and position unwind dates.
+- **Deploy Cosmos SDK upgrade** enabling sunset mode: disable new deposits,
+  staking, and IBC transfers IN; allow withdrawals, unstaking, and IBC transfers
+  OUT.
+- **Grace period** for users to unwind positions (LP positions, staked tokens,
+  locked governance tokens).
+- **Final Cosmos chain halt** at predetermined height H — coordinate with
+  validators, publish final block hash and state root.
+- **Export and publish state snapshot** using
+  `app.ExportAppStateAndValidators()` at halt height with public verification
+  hash.
+
+## Phase 2: State Processing
+
+- **Process snapshot into merkle trees** — create separate trees for token
+  balances, vesting schedules, staking rewards, governance voting power, and
+  protocol-specific state (LP positions, loans, NFTs). Use SHA-256, which is
+  supported natively on Solana.
+- **Publish merkle tree data** to permanent storage (IPFS or Arweave).
+- **Generate and verify merkle roots** before proceeding.
+
+## Phase 3: Solana Deployment
+
+- **Create SPL token mint(s)** — choose Token Program (legacy) or Token-2022
+  based on needs, match decimals from Cosmos, set mint authority to claim
+  program initially.
+- **Deploy a token claim program** with merkle roots in PDAs — implement proof
+  verification, track claims via bitmap or individual PDAs, include claim
+  deadline if applicable.
+- **Initialize migration config** with roots and parameters.
+- **Set up Realms governance** — configure community token voting, set
+  thresholds and proposal requirements.
+- **Create new accounts** for on-chain state such as vesting schedules.
+- **Deploy protocol-specific programs** (AMM, lending, staking, etc.).
+
+## Phase 4: Migration Execution
+
+- **Open claims** — consider a phased rollout to manage load.
+- **Migrate vesting schedules** to Solana vesting contracts.
+- **Bootstrap initial liquidity** on DEXs.
+- **Transfer program authorities** to governance.
+
+## Phase 5: Post-Migration
+
+- **Monitor claims** and provide user support.
+- **Handle unclaimed tokens** at deadline (send to treasury, burn, or
+  redistribute).
+- **Sunset Cosmos archive nodes** (keep some running for historical queries).
+- **Final security audit** of the live system.
+
+## Address Linking
+
+Since Cosmos uses bech32 addresses and Solana uses base58, users need a way to
+prove ownership of their Solana address.
+
+### Recommended: Pre-Registration + Signature Fallback
+
+**Primary (Pre-Registration):** Before the snapshot, users submit an on-chain
+transaction on Cosmos registering their Solana address. This provides the
+cleanest UX at claim time with on-chain proof that eliminates disputes.
+
+**Fallback (Signature Proof):** Users who missed registration can sign a message
+with their Cosmos private key (secp256k1) to prove ownership of their Solana
+address. Use Solana's `secp256k1_recover` for verification. Requires users to
+still have access to their Cosmos keys.
+
+## Token Claim Program
+
+The claim program is the critical component that distributes tokens to users
+based on their Cosmos holdings.
+
+### Key Components
+
+- **Merkle root storage:** Store roots in a PDA owned by the claim program.
+- **Proof verification:** Verify user-provided merkle proofs on-chain.
+- **Claim tracking:** Use bitmap or individual claim PDAs to prevent
+  double-claims.
+- **Events:** Emit events for all claims to enable indexing and monitoring.
+
+### Reference Implementations
+
+- [Jito Foundation Distributor](https://github.com/jito-foundation/distributor)
+  — Merkle-based distribution with vesting support.
+- [Metaplex Gumdrop](https://github.com/metaplex-foundation/mpl-gumdrop) —
+  Claimable SPL token airdrops.
+
+## Governance Migration
+
+Use [SPL Governance (Realms)](https://realms.today) for on-chain governance on
+Solana.
+
+### Configuration
+
+- **Community token:** Your migrated governance token.
+- **Council token (optional):** For core team or foundation multisig.
+- **Voting thresholds:** Match or adjust from your Cosmos governance parameters.
+- **Proposal requirements:** Deposit amounts and voting periods.
+
+### Vesting Options
+
+- **Realms built-in vesting:** Simpler but less flexible.
+- **Custom vesting program:** More control, integrates with Realms for voting.
+- [Bonfida Token Vesting](https://github.com/Bonfida/token-vesting): An
+  established community solution.
+
+## Complex State Migration
+
+### DeFi Positions
+
+**Liquidity Positions (AMM):** Snapshot LP token balances and underlying asset
+ratios. You can migrate LP tokens as-is, or break them down into underlying
+assets.
+
+**Lending/Borrowing:** Snapshot collateral, debt, and health factors. Handle bad
+debt before migration to avoid porting insolvency.
+
+**Staking/Delegation:** Map to new staking structure. Credit already-unbonding
+amounts appropriately.
+
+### NFT Migration
+
+- Snapshot all NFT ownership (token IDs → owners).
+- Redeploy collection metadata using the Metaplex standard.
+- Create a claim mechanism for each NFT.
+- Choose between compressed NFTs (cheaper) vs standard NFTs (more compatible).
+
+## Architecture Differences: Cosmos vs Solana
+
+Understanding the core architectural differences will help you design your
+migration strategy and re-architect your programs for Solana.
+
+| Cosmos                      | Solana                                 |
+| --------------------------- | -------------------------------------- |
+| Messages                    | Instructions                           |
+| Module state (single store) | Accounts (separate PDAs)               |
+| Synchronous execution       | Account-based parallelism              |
+| Gas metering                | Compute units (200k default, 1.4M max) |
+| CosmWasm contracts          | Rust programs (BPF bytecode)           |
+| bech32 addresses            | base58 / ed25519 addresses             |
+| Gas (dynamic pricing)       | Base fee + priority fee                |
+| ~6s probabilistic finality  | ~400ms optimistic, ~13s confirmed      |
+| IBC messages (cross-chain)  | CPI (Cross-Program Invocation)         |
+| Module-level KV store       | Account rent model                     |
+
+## Solana Constraints to Consider
+
+- **Account size limit:** 10MB max (costs rent)
+- **Transaction size limit:** 1232 bytes
+- **CPI depth limit:** 4 levels
+- **No native floating point** — use fixed-point or integer arithmetic
+- **Heap size:** 32KB per transaction
+- **Max accounts per transaction:** 64
+- **No dynamic memory allocation** beyond fixed sizes — use fixed-length arrays
+  and pre-allocated accounts
+
+## FAQ
+
+### How does token migration work from Cosmos to Solana?
+
+The standard approach is to take a snapshot of Cosmos token balances at a
+specific block height, build a merkle tree of balances, and deploy an SPL token
+claim program on Solana. Users prove their Cosmos address ownership (via
+pre-registration or secp256k1 signature) to claim their corresponding SPL
+tokens.
+
+### What is the equivalent of an ERC20 token on Solana?
+
+The Solana equivalent of ERC20 is the
+[SPL Token Program](https://www.solana-program.com/docs/token). Unlike Ethereum
+where each token is a separate contract, all SPL tokens are managed by a single
+on-chain program. Each token has a mint account, and each holder has an
+associated token account (ATA). Token-2022 extends this with additional features
+like transfer fees, confidential transfers, and more.
+
+## Resources
+
+- [SPL Governance (Realms)](https://realms.today)
+- [Cosmos SDK Snapshots](https://docs.cosmos.network/main/learn/advanced/genesis)
+- [Solana Token Program](/docs/core/tokens)
+- [Helius Airdrop Guide](https://www.helius.dev/blog/how-to-airdrop-on-solana)
+- [Jito Distributor](https://github.com/jito-foundation/distributor)
+- [Token Vesting Example](https://github.com/Bonfida/token-vesting)
+
+---
+
+[← Back to Chain Migration Hub](/developers/guides/migration)

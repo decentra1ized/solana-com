@@ -1,0 +1,85 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "ERC20"
+seoTitle: "EVM to SVM: ERC20 on Solana"
+description: "Learn how to build ERC20 on Solana using the Token Program."
+tags:
+  - migration
+  - evm
+  - tokens
+keywords:
+  - erc20
+  - spl token
+  - token program
+  - token migration
+---
+
+# ERC20
+
+Learn how to build ERC20 on Solana using the Token Program.
+
+## ERC20 vs. SPL Token
+
+Unlike Ethereum where each ERC20 is a separate deployed contract, all SPL tokens
+on Solana are managed by a single on-chain program: the **Token Program**.
+
+| ERC20 (Ethereum)            | SPL Token (Solana)                  |
+| --------------------------- | ----------------------------------- |
+| Separate contract per token | Single Token Program for all tokens |
+| `balanceOf(address)`        | Associated Token Account (ATA)      |
+| `transfer(to, amount)`      | `transfer` instruction              |
+| `approve` + `transferFrom`  | Delegate + `transfer`               |
+| `mint` (if mintable)        | `mintTo` instruction                |
+| `totalSupply`               | Mint account `supply` field         |
+
+## Key Concepts
+
+### Mint Account
+
+The mint account defines the token: total supply, decimals, and mint/freeze
+authority. One mint account = one token type.
+
+### Associated Token Account (ATA)
+
+Every user needs an ATA to hold a specific token. The ATA address is derived
+deterministically from the user's wallet and the mint address.
+
+```typescript
+import { getAssociatedTokenAddress } from "@solana/spl-token";
+
+const ata = await getAssociatedTokenAddress(
+  mintAddress, // The token mint
+  walletAddress // The owner
+);
+```
+
+### Token-2022 (Token Extensions)
+
+Token-2022 is the next-generation token program with built-in extensions for
+transfer fees, confidential transfers, interest-bearing tokens, and more — no
+need to deploy a custom contract.
+
+## Creating a Token
+
+```typescript
+import { createMint } from "@solana/spl-token";
+
+const mint = await createMint(
+  connection,
+  payer, // Fee payer
+  mintAuthority, // Who can mint new tokens
+  freezeAuthority, // Who can freeze accounts (null to disable)
+  9 // Decimals (like 18 for most ERC20s)
+);
+```
+
+## Resources
+
+- [SPL Token Program docs](/docs/core/tokens)
+- [Token-2022 extensions](/docs/core/tokens#token-extensions)
+- [spl-token CLI reference](https://spl.solana.com/token)
+
+---
+
+[← EVM to Solana Hub](/developers/guides/migration/evm-to-solana)

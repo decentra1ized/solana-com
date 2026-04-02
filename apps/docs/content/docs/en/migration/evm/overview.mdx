@@ -1,0 +1,257 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "Overview"
+seoTitle: "EVM to SVM — Solana Migration Guides for Ethereum Developers"
+description:
+  "Step-by-step guides for Ethereum developers migrating to Solana: accounts,
+  programs, token standards (ERC20, ERC721, ERC4337), consensus, and client
+  differences."
+featured: true
+tags:
+  - migration
+  - evm
+  - ethereum
+keywords:
+  - ethereum to solana
+  - evm to svm
+  - smart contract migration
+  - solidity to rust
+---
+
+# EVM to SVM — Solana Migration Guides for Ethereum Developers
+
+Learn about the key differences between the SVM and EVM development
+environments, and start building with Solana.
+
+## Guide Index
+
+### Start here — Core architecture and developer workflow
+
+Start with the concepts that change how you design on Solana: account ownership,
+stateless programs, transaction assembly, and client-side interactions.
+
+| Guide                                                                   | Description                                                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [Accounts](/docs/migration/evm/evm-vs-svm/accounts)                     | Understand the differences between Solana and Ethereum accounts.                           |
+| [Programs and Smart Contracts](/docs/migration/evm/evm-vs-svm/programs) | Explore programs—known as smart contracts in other ecosystems—and how they work on Solana. |
+| [Client Differences](/docs/migration/evm/evm-vs-svm/client-differences) | See the difference between clients, and different types, between SVM and EVM.              |
+| [Consensus](/docs/migration/evm/evm-vs-svm/consensus)                   | Learn how consensus is achieved on Solana as compared to Ethereum.                         |
+
+### Token standards — Port token, NFT, and vault patterns
+
+| Guide                                            | Description                                                 |
+| ------------------------------------------------ | ----------------------------------------------------------- |
+| [ERC20](/docs/migration/evm/standards/erc20)     | Learn how to build ERC20 on Solana using the Token Program. |
+| [ERC721](/docs/migration/evm/standards/erc721)   | Learn how to build ERC721 on Solana using Metaplex.         |
+| [ERC3643](/docs/migration/evm/standards/erc3643) | Learn how to build ERC3643 on Solana.                       |
+| [ERC4626](/docs/migration/evm/standards/erc4626) | Learn how to build ERC4626 on Solana.                       |
+
+### Advanced patterns — Wallet UX and execution model
+
+| Guide                                             | Description                            |
+| ------------------------------------------------- | -------------------------------------- |
+| [ERC4337](/docs/migration/evm/standards/erc4337)  | Learn how to build ERC4337 on Solana.  |
+| [EIP-2612](/docs/migration/evm/standards/eip2612) | Learn how to build EIP-2612 on Solana. |
+
+---
+
+# A Complete Guide to Solana Development for Ethereum Developers
+
+Get started with the key differences between EVM and SVM, and build your first
+Solana program.
+
+## The Mental Model Shift
+
+The single most important concept to internalize: **Solana programs are
+stateless**. All state lives in separate accounts owned by the program.
+
+| Ethereum                      | Solana                                 |
+| ----------------------------- | -------------------------------------- |
+| Contract stores its own state | Program reads/writes external accounts |
+| `storage` keyword             | Account data field                     |
+| `mapping(address => uint)`    | PDA per user                           |
+| `msg.sender`                  | `ctx.accounts.signer.key()`            |
+| `address(this)`               | `ctx.program_id`                       |
+
+## Setting Up
+
+### Prerequisites
+
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install Solana CLI
+sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+
+# Install Anchor
+cargo install --git https://github.com/coral-xyz/anchor avm --locked
+avm install latest && avm use latest
+```
+
+### Create a Project
+
+```bash
+anchor init my-program
+cd my-program
+```
+
+## Your First Program
+
+### Counter: Solidity vs. Anchor
+
+**Solidity:**
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Counter {
+    mapping(address => uint256) public counts;
+
+    function increment() public {
+        counts[msg.sender] += 1;
+    }
+}
+```
+
+**Anchor (Rust):**
+
+```rust
+use anchor_lang::prelude::*;
+
+declare_id!("YourProgramId...");
+
+#[program]
+pub mod counter {
+    use super::*;
+
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        ctx.accounts.counter.count = 0;
+        ctx.accounts.counter.owner = ctx.accounts.user.key();
+        Ok(())
+    }
+
+    pub fn increment(ctx: Context<Increment>) -> Result<()> {
+        ctx.accounts.counter.count += 1;
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(
+        init,
+        payer = user,
+        space = 8 + 8 + 32,
+        seeds = [b"counter", user.key().as_ref()],
+        bump
+    )]
+    pub counter: Account<'info, Counter>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Increment<'info> {
+    #[account(
+        mut,
+        seeds = [b"counter", user.key().as_ref()],
+        bump,
+        has_one = owner
+    )]
+    pub counter: Account<'info, Counter>,
+    pub user: Signer<'info>,
+}
+
+#[account]
+pub struct Counter {
+    pub count: u64,
+    pub owner: Pubkey,
+}
+```
+
+### Key differences explained
+
+1. **`seeds` + `bump`** — This is how you get a PDA. Instead of
+   `mapping(address => Counter)`, each user has their own Counter account at a
+   deterministic address.
+
+2. **`space = 8 + 8 + 32`** — Solana accounts must pre-allocate space. The `8`
+   is Anchor's account discriminator, `8` is `u64`, `32` is `Pubkey`.
+
+3. **`has_one = owner`** — Anchor constraint ensuring only the original
+   initializer can increment.
+
+## Calling Your Program from TypeScript
+
+```typescript
+import * as anchor from "@coral-xyz/anchor";
+
+const provider = anchor.AnchorProvider.env();
+anchor.setProvider(provider);
+const program = anchor.workspace.Counter as anchor.Program<Counter>;
+
+const [counterPda] = anchor.web3.PublicKey.findProgramAddressSync(
+  [Buffer.from("counter"), provider.wallet.publicKey.toBuffer()],
+  program.programId
+);
+
+await program.methods
+  .initialize()
+  .accounts({ counter: counterPda, user: provider.wallet.publicKey })
+  .rpc();
+
+await program.methods
+  .increment()
+  .accounts({ counter: counterPda, user: provider.wallet.publicKey })
+  .rpc();
+
+const counterAccount = await program.account.counter.fetch(counterPda);
+console.log("Count:", counterAccount.count.toString());
+```
+
+## Deploying
+
+```bash
+anchor build
+anchor deploy --provider.cluster devnet
+```
+
+## Key Concepts Summary
+
+| Concept          | Ethereum                 | Solana                       |
+| ---------------- | ------------------------ | ---------------------------- |
+| State storage    | Inside contract          | External accounts (PDAs)     |
+| Token standard   | ERC20 (custom contract)  | SPL Token (shared program)   |
+| NFT standard     | ERC721 (custom contract) | Metaplex                     |
+| Events           | `emit Event()`           | Account state / logs         |
+| Reentrancy guard | Manual `nonReentrant`    | Not needed (stateless)       |
+| Gas              | ETH-based                | Compute units (SOL fees)     |
+| Upgradability    | Proxy pattern            | Program upgrades (authority) |
+
+## FAQ
+
+### What is the biggest architectural difference between EVM and SVM?
+
+On Ethereum, smart contracts store their own state. On Solana, programs are
+stateless — all state lives in separate accounts owned by the program. This
+separation enables Solana's parallel transaction execution and is the core
+concept to internalize before migrating.
+
+### Can I deploy my Solidity contracts on Solana?
+
+Not directly. Solana programs are written in Rust (or other languages compiled
+to BPF bytecode). However, projects like [Solang](https://www.solang.dev/) can
+compile some Solidity to BPF. For most projects, a full rewrite in Rust is the
+recommended approach.
+
+## Resources
+
+- [Anchor Documentation](https://www.anchor-lang.com/)
+- [Solana Core Concepts](/docs/core)
+- [Solana Cookbook](/developers/cookbook)
+- [RareSkills Solana Tutorial](https://rareskills.io/solana-tutorial)
+- [Solana Playground](https://beta.solpg.io/)

@@ -1,0 +1,76 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "ERC721"
+seoTitle: "EVM to SVM: ERC721 on Solana"
+description: "Learn how to build ERC721 on Solana using Metaplex."
+tags:
+  - migration
+  - evm
+  - nft
+keywords:
+  - erc721
+  - nft
+  - metaplex
+  - compressed nft
+  - solana nft
+---
+
+# ERC721
+
+Learn how to build ERC721 on Solana using Metaplex.
+
+## ERC721 vs. Metaplex NFTs
+
+| ERC721 (Ethereum)            | Metaplex (Solana)                                 |
+| ---------------------------- | ------------------------------------------------- |
+| Contract stores NFT logic    | Programs: Token Metadata + Token Program          |
+| `tokenURI` returns metadata  | Off-chain metadata JSON (URI in Metadata account) |
+| `ownerOf(tokenId)`           | Token Account with amount = 1                     |
+| Single contract = collection | Collection NFT + individual NFT mints             |
+| `transferFrom`               | `transfer` instruction                            |
+
+## Key Concepts
+
+### Metaplex Token Metadata
+
+Every Solana NFT has:
+
+1. **Mint account** — SPL token with supply of 1 and 0 decimals.
+2. **Metadata account** — PDA storing name, symbol, URI, creators, and
+   collection info.
+3. **Token account** — Holds the 1 token for the owner.
+4. **Master Edition account** — Marks the token as an NFT (prevents minting
+   more).
+
+### Compressed NFTs (cNFTs)
+
+Solana supports compressed NFTs via Metaplex Bubblegum, storing NFT data in an
+on-chain merkle tree. This reduces minting costs from ~0.012 SOL to ~$0.000005
+per NFT — ideal for large collections.
+
+## Creating an NFT with Metaplex
+
+```typescript
+import { createNft } from "@metaplex-foundation/mpl-token-metadata";
+import { generateSigner, percentAmount } from "@metaplex-foundation/umi";
+
+const mint = generateSigner(umi);
+
+await createNft(umi, {
+  mint,
+  name: "My NFT",
+  uri: "https://example.com/metadata.json",
+  sellerFeeBasisPoints: percentAmount(5.5) // 5.5% royalty
+}).sendAndConfirm(umi);
+```
+
+## Resources
+
+- [Metaplex Documentation](https://developers.metaplex.com/)
+- [Metaplex Bubblegum (cNFTs)](https://developers.metaplex.com/bubblegum)
+- [Solana NFT guide](/developers/guides/getstarted/solana-token-airdrop-and-faucets)
+
+---
+
+[← EVM to Solana Hub](/developers/guides/migration/evm-to-solana)

@@ -1,0 +1,5 @@
+{
+  "title": "Standards",
+  "pages": ["erc20", "erc721", "erc4337", "erc3643", "erc4626", "eip2612"],
+  "defaultOpen": false
+}

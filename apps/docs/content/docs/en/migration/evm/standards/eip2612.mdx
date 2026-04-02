@@ -1,0 +1,80 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: intermediate
+title: "EIP-2612"
+seoTitle: "EVM to SVM: EIP-2612 (Permit) on Solana"
+description: "Learn how to build EIP-2612 permit patterns on Solana."
+tags:
+  - migration
+  - evm
+  - tokens
+keywords:
+  - eip2612
+  - permit
+  - gasless approval
+  - solana token
+---
+
+# EIP-2612
+
+Learn how to build EIP-2612 permit patterns on Solana.
+
+## What is EIP-2612?
+
+EIP-2612 adds a `permit` function to ERC20, allowing off-chain signature-based
+approvals. This enables gasless token approvals — users sign a message instead
+of submitting an on-chain `approve` transaction.
+
+## Solana Equivalent: Native Delegation
+
+Solana handles this differently. Since users sign transactions directly
+(including the instruction that uses the token), many EIP-2612 use cases are
+unnecessary.
+
+For delegation patterns, Solana's Token Program supports native `approve`:
+
+```typescript
+import { approve } from "@solana/spl-token";
+
+// Delegate tokens to a program/account
+await approve(
+  connection,
+  payer,
+  tokenAccount, // The token account to delegate from
+  delegate, // Who is allowed to transfer
+  owner, // Owner of the token account
+  amount // Max amount delegatable
+);
+```
+
+## Off-Chain Signatures with Ed25519
+
+For signature-based verification (analogous to permit), Solana uses Ed25519
+instruction verification:
+
+```rust
+use solana_program::ed25519_program;
+
+// Verify an off-chain signature
+let sig_check = new_ed25519_instruction(
+    &public_key,
+    &message,
+    &signature,
+);
+```
+
+## Token-2022: CPI Guard
+
+Token-2022's CPI Guard extension prevents programs from transferring tokens
+without explicit owner approval — providing stronger guarantees than EIP-2612
+for program-level interactions.
+
+## Resources
+
+- [SPL Token delegation](https://spl.solana.com/token#authority-delegation)
+- [Token-2022 CPI Guard](https://solana.com/developers/guides/token-extensions/cpi-guard)
+- [Ed25519 verification](/docs/core/programs)
+
+---
+
+[← EVM to Solana Hub](/developers/guides/migration/evm-to-solana)

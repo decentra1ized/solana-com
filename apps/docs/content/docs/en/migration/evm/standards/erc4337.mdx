@@ -1,0 +1,89 @@
+---
+date: 2026-03-13T00:00:00Z
+difficulty: advanced
+title: "ERC4337"
+seoTitle: "EVM to SVM: ERC4337 (Account Abstraction) on Solana"
+description:
+  "Learn how to build ERC4337 account abstraction patterns on Solana."
+tags:
+  - migration
+  - evm
+  - account-abstraction
+keywords:
+  - erc4337
+  - account abstraction
+  - smart wallet
+  - solana aa
+---
+
+# ERC4337
+
+Learn how to build ERC4337 account abstraction patterns on Solana.
+
+## Account Abstraction: Ethereum vs. Solana
+
+ERC4337 adds account abstraction to Ethereum via a separate `EntryPoint`
+contract and `UserOperation` mempool — a complex workaround because Ethereum
+accounts were not designed for AA from the start.
+
+**Solana has native account abstraction.** Programs can sign transactions via
+PDAs and authorize on-chain actions on behalf of controlled accounts. There is
+no separate mempool or entrypoint contract required.
+
+| ERC4337 (Ethereum)    | Solana Native                                      |
+| --------------------- | -------------------------------------------------- |
+| EntryPoint contract   | Native runtime                                     |
+| UserOperation         | Transaction authorized via program-controlled PDAs |
+| Bundler               | Leader (validator)                                 |
+| Paymaster             | Fee payer account in transaction                   |
+| Smart contract wallet | Program + PDA                                      |
+
+## Equivalent Patterns
+
+### Sponsored Transactions (Paymaster)
+
+On Solana, any account can be the fee payer in a transaction. This means you can
+sponsor user transactions natively without a paymaster contract:
+
+```typescript
+const transaction = new Transaction();
+// Fee payer is separate from the signer
+transaction.feePayer = sponsorPublicKey;
+transaction.add(userInstruction);
+
+// Sponsor signs for fees, user signs for their instruction
+await sendAndConfirmTransaction(connection, transaction, [sponsor, user]);
+```
+
+### Batched Transactions
+
+Solana transactions natively support multiple instructions in a single
+transaction — no need for ERC4337 batch calls:
+
+```typescript
+const transaction = new Transaction()
+  .add(approveInstruction)
+  .add(swapInstruction);
+```
+
+### Multi-sig / Social Recovery
+
+Use PDAs with multiple required signers:
+
+```rust
+#[account]
+pub struct Multisig {
+    pub owners: Vec<Pubkey>,
+    pub threshold: u8,
+}
+```
+
+## Resources
+
+- [Solana Account Model](/developers/guides/migration/accounts)
+- [Solana Programs docs](/docs/core/programs)
+- [Squads Protocol (multisig)](https://squads.so/)
+
+---
+
+[← EVM to Solana Hub](/developers/guides/migration/evm-to-solana)

@@ -1,0 +1,5 @@
+{
+  "title": "EVM (Ethereum)",
+  "pages": ["overview", "evm-vs-svm", "standards"],
+  "defaultOpen": true
+}
