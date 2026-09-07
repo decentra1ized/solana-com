@@ -312,18 +312,10 @@ export function EnterpriseFaqPage() {
                             </span>
                             {item.refs.map((ref) => {
                               const external = ref.href.startsWith("http");
-                              return (
-                                <a
-                                  key={`${ref.typeKey}-${ref.labelKey}`}
-                                  href={ref.href}
-                                  {...(external
-                                    ? {
-                                        target: "_blank",
-                                        rel: "noopener noreferrer",
-                                      }
-                                    : {})}
-                                  className="group/ref inline-flex items-center gap-1.5 text-[12px] text-[#ABABBA] hover:text-white border border-white/10 hover:border-[#14F195]/50 bg-white/[0.03] rounded-full px-3 py-1 no-underline transition-colors"
-                                >
+                              const chipClassName =
+                                "group/ref inline-flex items-center gap-1.5 text-[12px] text-[#ABABBA] hover:text-white border border-white/10 hover:border-[#14F195]/50 bg-white/[0.03] rounded-full px-3 py-1 no-underline transition-colors";
+                              const chipContent = (
+                                <>
                                   <span className="text-[#14F195] text-[10.5px] uppercase tracking-[0.06em]">
                                     {t(`refTypes.${ref.typeKey}`)}
                                   </span>
@@ -334,7 +326,26 @@ export function EnterpriseFaqPage() {
                                   >
                                     ↗
                                   </span>
+                                </>
+                              );
+                              return external ? (
+                                <a
+                                  key={`${ref.typeKey}-${ref.labelKey}`}
+                                  href={ref.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={chipClassName}
+                                >
+                                  {chipContent}
                                 </a>
+                              ) : (
+                                <Link
+                                  key={`${ref.typeKey}-${ref.labelKey}`}
+                                  href={ref.href}
+                                  className={chipClassName}
+                                >
+                                  {chipContent}
+                                </Link>
                               );
                             })}
                           </div>
