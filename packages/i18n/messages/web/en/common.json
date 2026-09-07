@@ -12076,18 +12076,19 @@
     },
     "hero": {
       "back": "← Enterprise",
-      "titleLead": "How Solana?",
-      "titleAccent": "Answered.",
+      "title": "How Solana? <accent>Answered.</accent>",
       "subtitle": "Common questions from institutions exploring Solana, answered in plain language for business and partnership teams."
     },
     "search": {
       "placeholder": "Search questions: custody, privacy, stablecoin, settlement…",
+      "label": "Search FAQ",
       "matches": "{count, plural, one {<b>#</b> match} other {<b>#</b> matches}} for “{query}”",
       "noResults": "No questions match your search."
     },
     "nav": {
       "topicsLabel": "Topics",
-      "allQuestions": "All questions"
+      "allQuestions": "All questions",
+      "optionWithCount": "{label} ({count})"
     },
     "counts": {
       "questions": "{count, plural, one {# question} other {# questions}}"
@@ -12149,7 +12150,6 @@
       "confidential-balances": "A Solana token feature that encrypts transfer amounts and balances while the transaction itself stays visible on the public network.",
       "private-channels": "A privacy capability being developed by Solana Foundation that limits full transaction visibility to the participants, while still settling to Solana's public network.",
       "cctp": "Circle's Cross-Chain Transfer Protocol. It burns USDC on one network and mints it natively on another, avoiding wrapped assets and bridge custody.",
-      "dvp": "Delivery-versus-Payment: both legs of a trade (asset and payment) settle together, or not at all.",
       "token-acl": "An access-control layer where new or unverified accounts are blocked by default until cleared, enabling automatic blacklist enforcement.",
       "rpc-providers": "Infrastructure companies that run the nodes and APIs your applications use to read from and send transactions to the network.",
       "transfer-hook": "A Token Extension that runs custom program logic on every transfer of a token, so checks like compliance rules execute at transfer time.",

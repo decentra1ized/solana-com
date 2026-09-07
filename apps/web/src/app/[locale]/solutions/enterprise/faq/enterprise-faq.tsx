@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@workspace/i18n/routing";
+import { defaultLocale } from "@workspace/i18n/config";
 import { cn } from "@/app/components/utils";
 import { SelectionColor } from "@/component-library/selection-color";
 import { FAQ_TOPICS, FAQ_TOTAL, type FaqItemMeta } from "@/data/enterprise/faq";
@@ -22,8 +23,14 @@ type IndexedTopic = {
   items: IndexedItem[];
 };
 
-function stripIcuTags(message: string): string {
-  return message.replace(/<[^>]+>/g, " ");
+// Turns an answer message into the plain prose the reader sees, so a search
+// phrase that spans a glossary term still matches. Paragraph breaks become a
+// space; inline tags are removed without inserting one.
+function answerSearchText(message: string): string {
+  return message
+    .replace(/<\/p>\s*<p>/g, " ")
+    .replace(/<[^>]+>/g, "")
+    .trim();
 }
 
 export function EnterpriseFaqPage() {
@@ -51,7 +58,9 @@ export function EnterpriseFaqPage() {
           searchText: [
             t(`items.${topic.key}.${item.key}.q`),
             t(`items.${topic.key}.${item.key}.tldr`),
-            stripIcuTags(t.raw(`items.${topic.key}.${item.key}.a`) as string),
+            answerSearchText(
+              t.raw(`items.${topic.key}.${item.key}.a`) as string,
+            ),
           ]
             .join(" ")
             .toLocaleLowerCase(locale),
@@ -136,10 +145,13 @@ export function EnterpriseFaqPage() {
           {t("hero.back")}
         </Link>
         <h1 className="font-bold text-[clamp(28px,4.4vw,44px)] leading-[1.12] tracking-[-0.015em] max-w-[700px] mt-4 mb-0">
-          {t("hero.titleLead")}{" "}
-          <em className="not-italic bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent">
-            {t("hero.titleAccent")}
-          </em>
+          {t.rich("hero.title", {
+            accent: (chunks) => (
+              <em className="not-italic bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent">
+                {chunks}
+              </em>
+            ),
+          })}
         </h1>
         <p className="text-[#ABABBA] max-w-[580px] mt-3 mb-0 text-[15px]">
           {t("hero.subtitle")}
@@ -170,7 +182,7 @@ export function EnterpriseFaqPage() {
               setSearchClosedIds(new Set());
             }}
             placeholder={t("search.placeholder")}
-            aria-label={t("search.placeholder")}
+            aria-label={t("search.label")}
             className="bg-transparent border-none outline-none text-white text-[15px] w-full placeholder:text-white/40"
           />
         </div>
@@ -201,7 +213,10 @@ export function EnterpriseFaqPage() {
               className="w-full appearance-none bg-white/[0.04] border border-white/10 rounded-[14px] px-4 py-3 pr-10 text-[15px] text-white outline-none cursor-pointer transition-colors focus:border-[#9945FF]"
             >
               <option value="all" className="bg-[#101014] text-white">
-                {t("nav.allQuestions")} ({FAQ_TOTAL})
+                {t("nav.optionWithCount", {
+                  label: t("nav.allQuestions"),
+                  count: FAQ_TOTAL,
+                })}
               </option>
               {sections.map((section) => (
                 <option
@@ -209,7 +224,10 @@ export function EnterpriseFaqPage() {
                   value={section.key}
                   className="bg-[#101014] text-white"
                 >
-                  {section.title} ({section.items.length})
+                  {t("nav.optionWithCount", {
+                    label: section.title,
+                    count: section.items.length,
+                  })}
                 </option>
               ))}
             </select>
@@ -221,7 +239,7 @@ export function EnterpriseFaqPage() {
               stroke="currentColor"
               strokeWidth="2"
               aria-hidden="true"
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none"
+              className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/40"
             >
               <path d="m6 9 6 6 6-6" />
             </svg>
@@ -312,10 +330,27 @@ export function EnterpriseFaqPage() {
                             </span>
                             {item.refs.map((ref) => {
                               const external = ref.href.startsWith("http");
-                              const chipClassName =
-                                "group/ref inline-flex items-center gap-1.5 text-[12px] text-[#ABABBA] hover:text-white border border-white/10 hover:border-[#14F195]/50 bg-white/[0.03] rounded-full px-3 py-1 no-underline transition-colors";
-                              const chipContent = (
-                                <>
+                              // References point at several apps served behind
+                              // rewrites (/docs, /news, /upgrades), so these stay
+                              // full navigations rather than client transitions —
+                              // with the active locale kept so readers land on the
+                              // translated page.
+                              const href =
+                                external || locale === defaultLocale
+                                  ? ref.href
+                                  : `/${locale}${ref.href}`;
+                              return (
+                                <a
+                                  key={`${ref.typeKey}-${ref.labelKey}`}
+                                  href={href}
+                                  {...(external
+                                    ? {
+                                        target: "_blank",
+                                        rel: "noopener noreferrer",
+                                      }
+                                    : {})}
+                                  className="group/ref inline-flex items-center gap-1.5 text-[12px] text-[#ABABBA] hover:text-white border border-white/10 hover:border-[#14F195]/50 bg-white/[0.03] rounded-full px-3 py-1 no-underline transition-colors"
+                                >
                                   <span className="text-[#14F195] text-[10.5px] uppercase tracking-[0.06em]">
                                     {t(`refTypes.${ref.typeKey}`)}
                                   </span>
@@ -326,26 +361,7 @@ export function EnterpriseFaqPage() {
                                   >
                                     ↗
                                   </span>
-                                </>
-                              );
-                              return external ? (
-                                <a
-                                  key={`${ref.typeKey}-${ref.labelKey}`}
-                                  href={ref.href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={chipClassName}
-                                >
-                                  {chipContent}
                                 </a>
-                              ) : (
-                                <Link
-                                  key={`${ref.typeKey}-${ref.labelKey}`}
-                                  href={ref.href}
-                                  className={chipClassName}
-                                >
-                                  {chipContent}
-                                </Link>
                               );
                             })}
                           </div>
