@@ -10304,11 +10304,82 @@
     }
   },
   "developers-evm-to-svm": {
+    "docsLayout": {
+      "backToHub": "← Migrate to Solana",
+      "breadcrumbDevelopers": "Developers",
+      "breadcrumbHub": "Migrate to Solana",
+      "guideNavigation": "Guide navigation",
+      "breadcrumb": "Breadcrumb",
+      "tableOfContents": "Table of contents",
+      "resources": "Resources",
+      "groups": {
+        "ethereum": {
+          "label": "Ethereum",
+          "eyebrow": "EVM -> Solana"
+        },
+        "cosmos": {
+          "label": "Cosmos",
+          "eyebrow": "Cosmos -> Solana"
+        }
+      },
+      "guides": {
+        "ethereum": "Overview",
+        "complete-guide": "Complete Guide",
+        "erc20": "ERC20",
+        "erc721": "ERC721",
+        "erc4337": "ERC4337",
+        "erc3643": "ERC3643",
+        "erc4626": "ERC4626",
+        "eip2612": "EIP-2612",
+        "consensus": "Consensus",
+        "accounts": "Accounts",
+        "smart-contracts": "Smart Contracts",
+        "client-differences": "Client Differences",
+        "cosmwasm": "CosmWasm",
+        "app-chain": "App Chain"
+      },
+      "guideDescriptions": {
+        "cosmwasm": "Port CosmWasm contracts",
+        "app-chain": "Migrate a Cosmos app chain"
+      }
+    },
+    "evmOverview": {
+      "tocHeadline": "On this page",
+      "guidesHeading": "Migration guides",
+      "guidesBody": "Each guide maps an Ethereum concept or token standard to its Solana equivalent. Start with the complete guide, then open the standard you are porting.",
+      "courseHeading": "RareSkills Solana course",
+      "courseBody": "RareSkills' Solana tutorial teaches Solana program development with Anchor to developers who already write Solidity. Work through its lessons alongside these guides.",
+      "courseLink": "Open the RareSkills tutorial",
+      "resourceHeadline": "Resources for Solana Developers",
+      "resourceCards": [
+        {
+          "heading": "Intro to Solana Development",
+          "body": "Browse official Solana development documentation.",
+          "ctaLabel": "Open the docs"
+        },
+        {
+          "heading": "Solana AI Agent Skills",
+          "body": "Use pre-built skills you can drop into your AI agents to interact with Solana.",
+          "ctaLabel": "View skills"
+        },
+        {
+          "heading": "Solana Bootcamp",
+          "body": "Watch a structured video series that walks through setup and day-one development workflows.",
+          "ctaLabel": "Watch the bootcamp"
+        },
+        {
+          "heading": "More Solana Developer Tools",
+          "body": "Browse docs, guides, cookbook recipes, tools, and ecosystem support channels.",
+          "ctaLabel": "Browse developer tools"
+        }
+      ]
+    },
     "meta": {
       "seoTitle": "Migrate to Solana: Chain Migration Hub",
       "seoDescription": "Guides for migrating your project from Ethereum, CosmWasm, or other chains to Solana."
     },
     "hero": {
+      "viewGuides": "View Guides",
       "eyebrow": "Chain Migration Guide",
       "headline": "Migrate to Solana",
       "body": "<p>Comprehensive guides for migrating your product from Ethereum, Cosmos, or other blockchains to Solana. Each guide is tailored to your source chain, covering key differences, tooling, and step-by-step migration patterns.</p>",
