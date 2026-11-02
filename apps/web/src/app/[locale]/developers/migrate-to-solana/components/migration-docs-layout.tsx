@@ -64,6 +64,25 @@ function findGuide(activeUrl: MigrationGuideUrl) {
   throw new Error(`Unknown migration guide: ${activeUrl}`);
 }
 
+/** A guide section: prose comes from the i18n catalog, code stays in the data file. */
+export type GuideSectionBlock = "prose" | { language: string; code: string };
+
+/** Interleave catalog prose with untranslated code blocks into one HTML string. */
+export function assembleGuideHtml(
+  // The data files are plain JS, so the "prose" marker arrives typed as string.
+  blocks: readonly (GuideSectionBlock | string)[],
+  prose: readonly string[],
+) {
+  let proseIndex = 0;
+  return blocks
+    .map((block) =>
+      typeof block === "string"
+        ? (prose[proseIndex++] ?? "")
+        : `<pre><code class="language-${block.language}">${block.code}</code></pre>`,
+    )
+    .join("\n");
+}
+
 export const DOCS_PROSE = cn(
   "text-base leading-[1.85] text-white/[0.72]",
   "[&_h2]:mb-4 [&_h2]:mt-14 [&_h2]:scroll-mt-32 [&_h2]:text-[1.6rem] [&_h2]:font-bold [&_h2]:leading-[1.2] [&_h2]:tracking-[-0.02em] [&_h2]:text-white",
