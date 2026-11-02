@@ -80,7 +80,7 @@ export const GUIDE_SECTIONS = [
       </ul>
       <h3>Program Derived Addresses</h3>
       <p><a href="/docs/core/pda">Program Derived Addresses (PDAs)</a> are the cornerstone of Solana state management. They are deterministic, off-curve account addresses derived from seeds plus the program ID and a bump seed. "Off-curve" means no private key exists for the address, so only the deriving program can sign for it through the runtime.</p>
-      <p>One note before the first program snippet: Solana has several frameworks for writing programs. This guide's Rust examples use <a href="https://www.anchor-lang.com/docs" target="_blank" rel="noreferrer">Anchor</a>, a framework that expands declarative macros like <code>#[derive(Accounts)]</code> and <code>#[account(...)]</code> into the account-validation and serialization code you would otherwise write by hand. Anchor is the most widely used choice, but not the only one — you can also build with the lower-level <a href="https://github.com/anza-xyz/pinocchio" target="_blank" rel="noreferrer">Pinocchio</a> or with no framework at all; the <a href="#project-structure">Toolchain section</a> compares the options.</p>
+      <p>One note before the first program snippet: Solana has several frameworks for writing programs. This guide's Rust examples use <a href="https://www.anchor-lang.com/docs" target="_blank" rel="noreferrer">Anchor</a>, a framework that expands declarative macros like <code>#[derive(Accounts)]</code> and <code>#[account(...)]</code> into the account-validation and serialization code you would otherwise write by hand. Anchor is the most widely used choice, but not the only one: you can also build with the lower-level <a href="https://github.com/anza-xyz/pinocchio" target="_blank" rel="noreferrer">Pinocchio</a> or with no framework at all; the <a href="#project-structure">Toolchain section</a> compares the options.</p>
       <h4>Solana PDA</h4>
       <pre><code class="language-rust">#[derive(Accounts)]
 pub struct Increment&lt;'info&gt; {
@@ -206,7 +206,7 @@ fn process_instruction(
         _ =&gt; Err(ProgramError::InvalidInstructionData),
     }
 }</code></pre>
-      <p>That <code>match</code> on the first byte is Solana's replacement for CosmWasm's <code>ExecuteMsg</code> enum dispatch: instruction data begins with a discriminator that assigns the payload to a handler. In Pinocchio you define and read it yourself — here a single byte. Anchor abstracts the same mechanism: it derives an 8-byte discriminator from each handler's name and routes on it automatically, which is why the snippet below has no visible dispatch.</p>
+      <p>That <code>match</code> on the first byte is Solana's replacement for CosmWasm's <code>ExecuteMsg</code> enum dispatch: instruction data begins with a discriminator that assigns the payload to a handler. In Pinocchio you define and read it yourself: here a single byte. Anchor abstracts the same mechanism: it derives an 8-byte discriminator from each handler's name and routes on it automatically, which is why the snippet below has no visible dispatch.</p>
       <pre><code class="language-rust">#[program]
 pub mod counter {
     use super::*;
@@ -294,7 +294,7 @@ pub fn process_transfer(
 }</code></pre>
       <h3>Rent and space allocation</h3>
       <p>Solana storage is not abstracted away. Accounts must carry enough <a href="/docs/references/terminology#lamport">lamports</a>, the smallest unit of SOL, to remain <a href="/docs/references/terminology#rent-exempt">rent-exempt</a>. Rent exemption means the account has the minimum balance required to stay onchain for its allocated data size, and you must allocate enough space up front for the layout you intend to store. Despite the name, rent is a refundable deposit, not a fee: the lamports sit escrowed in the account to hold its state and come back in full when the account is closed.</p>
-      <p>The CLI prints the deposit for any data size — here 49 bytes, the 8-byte discriminator plus <code>UserBalance::INIT_SPACE</code>:</p>
+      <p>The CLI prints the deposit for any data size: here 49 bytes, the 8-byte discriminator plus <code>UserBalance::INIT_SPACE</code>:</p>
       <pre><code class="language-bash">solana rent 49 -um
 # Rent-exempt minimum: 0.00123192 SOL</code></pre>
       <pre><code class="language-rust">#[account(
@@ -326,7 +326,7 @@ pub struct Metadata {
     #[max_len(200)]
     pub uri: String,
 }</code></pre>
-      <p>If you may add fields later, either pre-allocate spare space up front or plan a <a href="/docs/core/accounts/modification-rules"><code>realloc</code></a> or migration path — the <a href="https://github.com/solana-developers/program-examples/tree/main/basics/realloc" target="_blank" rel="noreferrer">realloc program example</a> shows the resize flow.</p>
+      <p>If you may add fields later, either pre-allocate spare space up front or plan a <a href="/docs/core/accounts/modification-rules"><code>realloc</code></a> or migration path: the <a href="https://github.com/solana-developers/program-examples/tree/main/basics/realloc" target="_blank" rel="noreferrer">realloc program example</a> shows the resize flow.</p>
       <p>Reallocation changes an existing account's data length, but it has runtime limits and may require extra lamports to keep the account rent-exempt. Existing Solana accounts do not automatically grow the way contract-local storage feels like it does in CosmWasm.</p>
     `,
   },
@@ -501,7 +501,7 @@ invoke_signed(
         </table>
       </div>
       <p>An <a href="/docs/tokens/basics/create-token-account#what-is-an-associated-token-account">Associated Token Account (ATA)</a> is the conventional token account address for a wallet and mint. It is derived deterministically, which lets clients find or create the expected token account without asking users to manage token-account addresses directly.</p>
-      <p>One difference that catches Cosmos developers: a bank send credits any address implicitly, but an SPL transfer fails unless the recipient's token account has already been initialized. Create the ATA before transferring — anyone can pay to create one for any wallet, and idempotent creation (the ATA program's create-idempotent instruction, or Anchor's <code>init_if_needed</code> constraint) makes it safe to include in every transfer flow.</p>
+      <p>One difference that catches Cosmos developers: a bank send credits any address implicitly, but an SPL transfer fails unless the recipient's token account has already been initialized. Create the ATA before transferring; anyone can pay to create one for any wallet, and idempotent creation (the ATA program's create-idempotent instruction, or Anchor's <code>init_if_needed</code> constraint) makes it safe to include in every transfer flow.</p>
       <p>A vault token account is a normal token account whose authority is a PDA instead of a user's wallet. Your program can move tokens out of that vault only when it proves the PDA seeds to the runtime with <a href="/docs/core/cpi#invoke-vs-invoke_signed"><code>invoke_signed</code></a> or Anchor's signer-seed helpers.</p>
     `,
   },
@@ -549,7 +549,7 @@ const state = userBalanceCodec.decode(accountData.slice(8));</code></pre>
     tone: "phase",
     html: `
       <h2>9. Invoking Your Program: Generated Clients</h2>
-      <p>On Cosmos, a client sends a JSON message through CosmJS and the chain routes it to the contract. On Solana, the client assembles the whole transaction: it picks the instruction, encodes its data, and lists every account the instruction touches. Nobody writes that by hand per instruction — clients are generated from the <a href="/docs/references/terminology#idl">IDL</a>, and the generated code does the account bookkeeping for you.</p>
+      <p>On Cosmos, a client sends a JSON message through CosmJS and the chain routes it to the contract. On Solana, the client assembles the whole transaction: it picks the instruction, encodes its data, and lists every account the instruction touches. Nobody writes that by hand per instruction; clients are generated from the <a href="/docs/references/terminology#idl">IDL</a>, and the generated code does the account bookkeeping for you.</p>
       <h4>Compare invocation:</h4>
       <pre><code class="language-typescript">const client = await SigningCosmWasmClient.connectWithSigner(rpcUrl, signer);
 await client.execute(sender, contractAddress, { increment: {} }, "auto");</code></pre>
@@ -559,9 +559,9 @@ await program.methods
   .increment()
   .accounts({ user: wallet.publicKey })
   .rpc();</code></pre>
-      <p>The Anchor client reads instruction shapes, account lists, and PDA seed metadata from the IDL, so it derives the counter PDA and fills in known programs itself — you pass only what it cannot infer. The earlier rule that the caller must list every account still holds at the wire level; the generated client is what does the listing.</p>
+      <p>The Anchor client reads instruction shapes, account lists, and PDA seed metadata from the IDL, so it derives the counter PDA and fills in known programs itself; you pass only what it cannot infer. The earlier rule that the caller must list every account still holds at the wire level; the generated client is what does the listing.</p>
       <h3>Standalone clients with Codama</h3>
-      <p><a href="/docs/programs/codama/clients">Codama</a> generates framework-free clients from the same IDL: TypeScript builders compatible with <a href="https://github.com/anza-xyz/kit" target="_blank" rel="noreferrer">@solana/kit</a> through <code>@codama/renderers-js</code>, and Rust clients through <code>@codama/renderers-rust</code>. Each generated instruction builder validates inputs, resolves default and derivable accounts, encodes arguments, and returns a ready-to-send instruction, with account decoders and PDA helpers alongside — Kit's own program clients are generated this way.</p>
+      <p><a href="/docs/programs/codama/clients">Codama</a> generates framework-free clients from the same IDL: TypeScript builders compatible with <a href="https://github.com/anza-xyz/kit" target="_blank" rel="noreferrer">@solana/kit</a> through <code>@codama/renderers-js</code>, and Rust clients through <code>@codama/renderers-rust</code>. Each generated instruction builder validates inputs, resolves default and derivable accounts, encodes arguments, and returns a ready-to-send instruction, with account decoders and PDA helpers alongside; Kit's own program clients are generated this way.</p>
       <pre><code class="language-bash">npx codama init
 npx codama run js</code></pre>
       <p>Anchor projects can fold this into the build: run <code>anchor codama generate -l js,rust -p clients target/idl/counter.json</code>, or set <code>[clients] auto = true</code> in Anchor.toml so every <code>anchor build</code> regenerates the clients.</p>
@@ -668,7 +668,7 @@ solana program show PROGRAM_ID
 solana program deploy --program-id PROGRAM_ID ./target/deploy/my_program.so
 solana program set-upgrade-authority PROGRAM_ID --final</code></pre>
       <h3>Costs, addresses, and free devnet rehearsals</h3>
-      <p>Deployment locks a rent deposit sized to the program binary — usually a few SOL, and by far the largest cost of going live. Check it up front, and note that closing a program with <code>solana program close</code> returns the deposit:</p>
+      <p>Deployment locks a rent deposit sized to the program binary: usually a few SOL, and by far the largest cost of going live. Check it up front, and note that closing a program with <code>solana program close</code> returns the deposit:</p>
       <pre><code class="language-bash">solana rent $(wc -c &lt; ./target/deploy/my_program.so)</code></pre>
       <p>A program ID is an ordinary keypair until you deploy to it, so teams often grind a recognizable vanity address first and deploy to that:</p>
       <pre><code class="language-bash">solana-keygen grind --starts-with CNTR:1
@@ -890,7 +890,7 @@ pub fn process_increment(
         <li>Test PDA derivation, account substitution resistance, stale reads after CPI, and account initialization paths.</li>
         <li>Define a state-migration strategy before the first production upgrade.</li>
         <li>Decide whether upgrade authority will remain active, move to multisig, or be finalized away.</li>
-        <li>Work through the <a href="/docs/tools/production-readiness">production readiness guide</a> before launch — redundant RPC, priority fees and compute budgets for transaction landing, retry and confirmation strategy, key management, and monitoring.</li>
+        <li>Work through the <a href="/docs/tools/production-readiness">production readiness guide</a> before launch: redundant RPC, priority fees and compute budgets for transaction landing, retry and confirmation strategy, key management, and monitoring.</li>
       </ul>
     `,
   },
